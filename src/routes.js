@@ -1,5 +1,8 @@
 import express from 'express';
+import { handlePostWebhook } from './controllers/handle-post-webhook.js';
 
-const routes = express.Router();
+const router = express.Router();
 
-export default routes;
+router.post("/", handlePostWebhook);
+
+export default router;

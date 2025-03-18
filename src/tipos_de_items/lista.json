@@ -1,0 +1,24 @@
+{
+    "itemId": "Id del ítem",
+    // Esto lo consumen las funciones
+    "headerText": "Texto del encabezado",
+    "bodyText": "Texto del cuerpo",
+    "footerText": "Texto del pie de página",
+    "actionsData": {
+      "actionButton": "Texto del botón de acción",
+      "sectionsData": [
+        {
+          "sectionTitle": "Título de la sección",
+          "sectionRows": [
+            {
+              "sectionId": "ID de la sección",
+              "subitemId": "ID del subelemento",
+              "subitemTitle": "Título del subelemento",
+              "subitemDescription": "Descripción del subelemento"
+            }
+          ]
+        }
+      ]
+    }
+}
+  
