@@ -65,6 +65,10 @@ export async function handlePostWebhook(req, res) {
         // Extraer los datos del mensaje
         const messageData = dataExtractorFromRequest({messageRequest: incomingMessage});
 
+        if (!messageData) {
+            return res.status(400).json({ error: "No se encuentra tipo o contenido del mensaje."});
+        }
+
         // Revisar el flujo conversacional asociado a la empresa y usuario
         const flowFound = await flowReviewer({
             res: res,
