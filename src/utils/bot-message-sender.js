@@ -25,6 +25,6 @@ export async function botMessageSender({
         return true;
     } catch (error) {
         console.error("error details:", error);
-        throw new Error(`Error in send message: ${error.response?.data?.error?.message}`);
+        throw new Error(`Error al enviar mensaje: ${error.response?.data?.error?.message}`);
     }
 }
