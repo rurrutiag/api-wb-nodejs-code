@@ -17,16 +17,14 @@ export async function botMessageSender({
             ...content
         };
         let headers = {
-            headers: {
                 Authorization: `Bearer ${GRAPH_API_TOKEN}`,
-            }
         };
         let logRegistry = {step: "Construir mensaje a enviar en botMessageSender", dataSending: requestData};
         await logRecorder(logRegistry);
         let sending = await axios.post(
             url,
-            {...requestData},
-            {...headers}
+            requestData,
+            {headers}
         );
         logRegistry = { step: "Resultado de usar axios en botMessageSender", axios: sending };
         await logRecorder(logRegistry);
