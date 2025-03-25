@@ -1,5 +1,6 @@
 import { flowFinder } from "../utils/flow-finder.js";
 import { flowInitiator } from "../utils/flow-initiator.js";
+import { logRecorder } from "../utils/log-recorder.js";
 import { messageSaverNoFlow } from "../utils/message-saver.js";
 import triggerFinder from "../utils/trigger-finder.js";
 
@@ -40,6 +41,11 @@ export async function flowReviewer({
                 companyId: companyId,
                 message: messageData
             });
+
+            await logRecorder({
+                step: "flowReviewer: flowFound es null",
+                triggerFound: triggerFound
+            });
             
             // Si el trigger existe, entonces determinar el flujo encontrado
             if (triggerFound !== null) {
@@ -50,7 +56,10 @@ export async function flowReviewer({
                         user: userMedia,
                         flow: triggerFound.flow_id
                     });
-                
+                    await logRecorder({
+                        step: "flowReviewer: flowInitiator ejecutado",
+                        flowInitiator: newFlow
+                    });
                 flowFound = newFlow;
                 firstTriggerMessage = triggerFound.first_item_id;
 
