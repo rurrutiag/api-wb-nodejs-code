@@ -25,7 +25,7 @@ export async function flowReviewer({
     res, companyId, companyMedia, userMedia, messageData
 }) {
     try {
-        // Hay flujo activo?
+        // Hay flujo activo? Este se debe pasar a la base de datos
         let flowFound = flowFinder({
             companyId: companyId,
             receiver: companyMedia,
@@ -36,7 +36,7 @@ export async function flowReviewer({
 
         if (flowFound === null) {
             // Si no hay flujo, revisaremos que entonces sea un trigger
-            const triggerFound = triggerFinder({
+            const triggerFound = await triggerFinder({
                 companyId: companyId,
                 message: messageData
             });

@@ -1,4 +1,5 @@
 import { getCache } from "../cache/manager.js";
+import businessFlowTriggersHunter from "./business-flow-triggers-hunter.js";
 
 /**
  * Función que busca un desencadenador (trigger) en la caché basado en el tipo de mensaje y los datos del mensaje.
@@ -12,17 +13,23 @@ import { getCache } from "../cache/manager.js";
  * 
  * @returns {Object|null} Retorna un objeto con los identificadores `flow_id` y `first_item_id` del desencadenador que coincida, o null si no hay coincidencias.
  */
-export default function triggerFinder({
+export default async function triggerFinder({
     companyId,
     message
 }) {
     
-    const triggers = getCache(`triggers:${companyId}`);
+    const flowTriggers = await businessFlowTriggersHunter();
+    let triggersMatrix = {};
+    Object.entries(flowTriggers).forEach(([company, triggers]) => {
+        triggersMatrix[company] = triggers;
+    });
+    let companyTriggers = triggersMatrix[companyId];
+    // const triggers = getCache(`triggers:${companyId}`);
     
-    if (!triggers || triggers.length === 0) {
+    if (!companyTriggers || companyTriggers.length === 0) {
         return null;
     }
-    for (const trigger of triggers) {
+    for (const trigger of companyTriggers) {
         if (
             trigger.trigger_type === message.type
         ) {
