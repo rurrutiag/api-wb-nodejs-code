@@ -15,15 +15,18 @@ export async function botMessageSender({
             type: type,
             ...content
         };
-        let logRegistry = {step: "Construir mensaje a enviar en botMessageSender", dataSending: dataSending};
-        await logRecorder(logRegistry);
-        let sending = await axios({
+        let axiosParams = {
             method: "POST",
             url: `${WAB_API_URL}/${receiver}/messages`,
             headers: {
                 Authorization: `Bearer ${GRAPH_API_TOKEN}`,
             },
             data: dataSending
+        };
+        let logRegistry = {step: "Construir mensaje a enviar en botMessageSender", dataSending: axiosParams};
+        await logRecorder(logRegistry);
+        let sending = await axios({
+            ...axiosParams
         });
         console.log(sending);
         return true;
