@@ -3,6 +3,7 @@ import { responseManager } from "../services/response-mangament.js";
 import { botMessageSender } from "../utils/bot-message-sender.js";
 import companyIdHunter from "../utils/company-id-hunter.js";
 import { dataExtractorFromRequest } from "../utils/data-extractor-from-request.js";
+import { logRecorder } from "../utils/log-recorder.js";
 import { messageSaver } from "../utils/message-saver.js";
 
 /**
@@ -34,7 +35,7 @@ import { messageSaver } from "../utils/message-saver.js";
  * @see {@link https://developers.facebook.com/docs/whatsapp/cloud-api} - WhatsApp Cloud API.
  */
 export async function handlePostWebhook(req, res) {
-    
+    let logRegistry;
     try {
         // Recuperar la solicitud entrante
         const incomingRequest = req.body.entry?.[0]?.changes?.[0]?.value || null;
@@ -60,7 +61,12 @@ export async function handlePostWebhook(req, res) {
         const companyId = companyIdHunter({wab: receiver});
         
         if (!companyId) {
-            return res.status(401).json({ error: "No autorizado: Empresa no identificada." });
+            logRegistry = {
+                request: incomingRequest,
+                error: "No autorizado: Empresa no identificada."
+            };
+            logRecorder(logRegistry);
+            return res.status(401).json({ error: logRegistry.error });
         }
         // Extraer los datos del mensaje
         const messageData = dataExtractorFromRequest({messageRequest: incomingMessage});
