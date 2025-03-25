@@ -30,7 +30,10 @@ export async function botMessageSender({
         await logRecorder(logRegistry);
         return true;
     } catch (error) {
-        console.error("error details:", error);
+        await logRecorder({
+            step: "botMessageSender: Error al envíar POST a la API",
+            error: error
+        });
         throw new Error(`Error al enviar a la api url: ${error.response?.data?.error?.message}`);
     }
 }
