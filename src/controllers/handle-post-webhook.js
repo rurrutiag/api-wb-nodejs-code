@@ -69,14 +69,6 @@ export async function handlePostWebhook(req, res) {
             return res.status(401).json({ error: logRegistry.error });
         }
 
-        logRegistry = {
-            request: incomingRequest,
-            companyId: companyId,
-            receiver: receiver,
-            sender: sender,
-            path: "Entrará a revisar contenido del mensaje."
-        };
-        await logRecorder(logRegistry);
         // Extraer los datos del mensaje
         const messageData = dataExtractorFromRequest({messageRequest: incomingMessage});
 
@@ -85,12 +77,8 @@ export async function handlePostWebhook(req, res) {
         }
 
         logRegistry = {
-            request: incomingRequest,
-            companyId: companyId,
-            receiver: receiver,
-            sender: sender,
-            messageData: messageData,
-            path: "Entrará a flowReviewer"
+            step: "Resultado de messageData",
+            messageData: messageData
         };
         await logRecorder(logRegistry);
         // Revisar el flujo conversacional asociado a la empresa y usuario
@@ -103,12 +91,8 @@ export async function handlePostWebhook(req, res) {
         });
 
         logRegistry = {
-            request: incomingRequest,
-            companyId: companyId,
-            receiver: receiver,
-            sender: sender,
-            flowReviewer: flowFound,
-            path: "Resultado de flowReviewer"
+            step: "Resultado de flowReviewer",
+            flowReviewer: flowFound
         };
         await logRecorder(logRegistry);
 
@@ -132,12 +116,9 @@ export async function handlePostWebhook(req, res) {
         });
 
         logRegistry = {
-            request: incomingRequest,
-            companyId: companyId,
-            receiver: receiver,
-            sender: sender,
+            step: "Resultado de flowResponse",
             flowResponse: flowResponse,
-            path: "Resultado de flowResponse"
+            
         };
         await logRecorder(logRegistry);
 
@@ -158,12 +139,8 @@ export async function handlePostWebhook(req, res) {
             content: flowResponse.content
         });
         logRegistry = {
-            request: incomingRequest,
-            companyId: companyId,
-            receiver: receiver,
-            sender: sender,
-            botSentMessage: botSentMessage,
-            path: "Resultado de botSentMessage"
+            step: "Resultado de botSentMessage",
+            botSentMessage: botSentMessage,     
         };
         await logRecorder(logRegistry);
 
