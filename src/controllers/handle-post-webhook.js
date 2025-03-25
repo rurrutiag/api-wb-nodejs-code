@@ -58,11 +58,11 @@ export async function handlePostWebhook(req, res) {
         }
     
         // Obtener company_id asociado al telefono empresarial
-        const companyId = companyIdHunter({wab: receiver});
+        const companyId = await companyIdHunter({wab: receiver});
         
         if (!companyId) {
             logRegistry = {
-                request: incomingRequest,
+                step: "Condicional para resultados de companyIdHunter en handlePostWebHook",
                 error: "No autorizado: Empresa no identificada."
             };
             await logRecorder(logRegistry);
@@ -73,14 +73,14 @@ export async function handlePostWebhook(req, res) {
         const messageData = dataExtractorFromRequest({messageRequest: incomingMessage});
 
         if (!messageData) {
+            logRegistry = {
+                step: "No hay resultado de messageData",
+                messageData: messageData
+            };
+            await logRecorder(logRegistry);
             return res.status(400).json({ error: "No se encuentra tipo o contenido del mensaje."});
         }
 
-        logRegistry = {
-            step: "Resultado de messageData",
-            messageData: messageData
-        };
-        await logRecorder(logRegistry);
         // Revisar el flujo conversacional asociado a la empresa y usuario
         const flowFound = await flowReviewer({
             res: res,
