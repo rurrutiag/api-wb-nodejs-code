@@ -6,8 +6,7 @@ dotenv.config();
 export async function botMessageSender({
     receiver, sender, type, content
 }){
-    try {
-        const { GRAPH_API_TOKEN, WAB_API_URL } = process.env;
+    const { GRAPH_API_TOKEN, WAB_API_URL } = process.env;
         let url = `${WAB_API_URL}/${receiver}/messages`;
         let requestData = {
             messaging_product: "whatsapp",
@@ -21,6 +20,7 @@ export async function botMessageSender({
         };
         let logRegistry = {step: "Construir mensaje a enviar en botMessageSender", dataSending: requestData};
         await logRecorder(logRegistry);
+    try {    
         let sending = await axios.post(
             url,
             requestData,
@@ -31,6 +31,6 @@ export async function botMessageSender({
         return true;
     } catch (error) {
         console.error("error details:", error);
-        throw new Error(`Error al enviar mensaje: ${error.response?.data?.error?.message}`);
+        throw new Error(`Error al enviar a la api url: ${error.response?.data?.error?.message}`);
     }
 }
