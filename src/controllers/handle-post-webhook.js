@@ -68,6 +68,15 @@ export async function handlePostWebhook(req, res) {
             await logRecorder(logRegistry);
             return res.status(401).json({ error: logRegistry.error });
         }
+
+        logRegistry = {
+            request: incomingRequest,
+            companyId: companyId,
+            receiver: receiver,
+            sender: sender,
+            path: "Entrará a revisar contenido del mensaje."
+        };
+        await logRecorder(logRegistry);
         // Extraer los datos del mensaje
         const messageData = dataExtractorFromRequest({messageRequest: incomingMessage});
 
