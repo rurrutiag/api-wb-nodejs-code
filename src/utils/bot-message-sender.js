@@ -23,11 +23,11 @@ export async function botMessageSender({
         };
         let logRegistry = {step: "Construir mensaje a enviar en botMessageSender", dataSending: requestData};
         await logRecorder(logRegistry);
-        let sending = await axios.post({
+        let sending = await axios.post(
             url,
-            ...requestData,
-            ...headers
-        });
+            {...requestData},
+            {...headers}
+        );
         logRegistry = { step: "Resultado de usar axios en botMessageSender", axios: sending };
         await logRecorder(logRegistry);
         return true;
