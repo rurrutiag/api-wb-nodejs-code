@@ -84,6 +84,15 @@ export async function handlePostWebhook(req, res) {
             return res.status(400).json({ error: "No se encuentra tipo o contenido del mensaje."});
         }
 
+        logRegistry = {
+            request: incomingRequest,
+            companyId: companyId,
+            receiver: receiver,
+            sender: sender,
+            messageData: messageData,
+            path: "Entrará a flowReviewer"
+        };
+        await logRecorder(logRegistry);
         // Revisar el flujo conversacional asociado a la empresa y usuario
         const flowFound = await flowReviewer({
             res: res,
@@ -92,6 +101,16 @@ export async function handlePostWebhook(req, res) {
             userMedia: sender,
             messageData: messageData
         });
+
+        logRegistry = {
+            request: incomingRequest,
+            companyId: companyId,
+            receiver: receiver,
+            sender: sender,
+            flowReviewer: flowFound,
+            path: "Resultado de flowReviewer"
+        };
+        await logRecorder(logRegistry);
 
         if (flowFound.status) {
             return res.status(flowFound.status).json({error: flowFound.message});
@@ -112,6 +131,16 @@ export async function handlePostWebhook(req, res) {
             firstMessageId: flowFound.first_item_id
         });
 
+        logRegistry = {
+            request: incomingRequest,
+            companyId: companyId,
+            receiver: receiver,
+            sender: sender,
+            flowResponse: flowResponse,
+            path: "Resultado de flowResponse"
+        };
+        await logRecorder(logRegistry);
+
         if (!flowResponse) {
             return res.status(422).json({ error: "Mensaje recibido no compatible con el flujo esperado." });
         }
@@ -128,6 +157,16 @@ export async function handlePostWebhook(req, res) {
             type: flowResponse.content_type,
             content: flowResponse.content
         });
+        logRegistry = {
+            request: incomingRequest,
+            companyId: companyId,
+            receiver: receiver,
+            sender: sender,
+            botSentMessage: botSentMessage,
+            path: "Resultado de botSentMessage"
+        };
+        await logRecorder(logRegistry);
+
         if (botSentMessage) {
             return res.sendStatus(200); // Éxito
         } else {
