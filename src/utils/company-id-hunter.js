@@ -12,12 +12,14 @@ export default async function companyIdHunter({wab}) {
         business: businesses
     };
     await logRecorder(logRegistry);
-    businesses.forEach((({ id, platforms}) => {
-        if (platforms.wab) {
-            platforms.wab.forEach(number => {
-                wabMatrix[number] = id;
-            });
-        }
+    businesses.forEach((({ data }) => {
+        data.forEach((({ id, platforms}) => {
+            if (platforms.wab) {
+                platforms.wab.forEach(number => {
+                    wabMatrix[number] = id;
+                });
+            }
+        }));
     }));
     wabSearched = wabMatrix[wab] || null;
     // const wabIndex = getCache("wabIndex") || {};
