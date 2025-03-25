@@ -65,7 +65,7 @@ export async function handlePostWebhook(req, res) {
                 request: incomingRequest,
                 error: "No autorizado: Empresa no identificada."
             };
-            logRecorder(logRegistry);
+            await logRecorder(logRegistry);
             return res.status(401).json({ error: logRegistry.error });
         }
         // Extraer los datos del mensaje

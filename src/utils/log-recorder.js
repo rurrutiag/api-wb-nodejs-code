@@ -8,6 +8,11 @@ export async function logRecorder(registry){
             `;
         let params = [registry];
         const recording = await queryDb(query, params, false);
+        if (recording) {
+            return true;
+        } else {
+            return false;
+        }
     } catch (error) {
         console.error("error details:", error);
         throw new Error(`Error al registrar log: ${error.response?.data?.error?.message}`);
