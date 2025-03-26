@@ -75,10 +75,30 @@ export async function handleTemporal(req, res) {
     let headers = {
             Authorization: `Bearer ${GRAPH_API_TOKEN}`,
     };
-    let sending = await axios.post(
-        url,
-        requestData,
-        {headers}
-    );
-    return res.status(200);
+    try {
+        // let sending = await axios.post(
+        //     url,
+        //     requestData,
+        //     {headers}
+        // );
+        await axios({
+            method: "POST",
+            url: url,
+            headers: headers,
+            data: {
+                messaging_product: "whatsapp",
+                status: "read",
+                message_id: incomingMessage.id,
+            },
+        });
+        let sending = await axios({
+            method: "POST",
+            url: url,
+            headers: headers,
+            data: requestData,
+        });
+        return res.status(200);
+    } catch (error) {
+        return res.status(400);
+    }   
 }
