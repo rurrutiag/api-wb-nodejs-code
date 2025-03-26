@@ -21,7 +21,7 @@ export async function handleTemporal(req, res) {
         messaging_product: "whatsapp",
         recipient_type: "individual",
         to: "56984327660",
-        type: interactive,
+        type: "interactive",
         "interactive": {
             "body": {
             "text": "Texto resumido"
@@ -81,6 +81,7 @@ export async function handleTemporal(req, res) {
         //     requestData,
         //     {headers}
         // );
+        console.log("aqui estoy");
         await axios({
             method: "POST",
             url: url,
@@ -91,14 +92,15 @@ export async function handleTemporal(req, res) {
                 message_id: incomingMessage.id,
             },
         });
+        return res.status(200).send('OK')
         let sending = await axios({
             method: "POST",
             url: url,
             headers: headers,
             data: requestData,
         });
-        return res.status(200);
+        
     } catch (error) {
-        return res.status(400);
+        return res.status(403).send(error);
     }   
 }
