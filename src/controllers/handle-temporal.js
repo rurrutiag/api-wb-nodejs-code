@@ -17,6 +17,13 @@ export async function handleTemporal(req, res) {
     const { GRAPH_API_TOKEN, WAB_API_URL } = process.env;
     const receiver = "515186325014152";
     let url = `${WAB_API_URL}/${receiver}/messages`;
+    const buttons = [
+        { id: "d741255611354185b3d9e455d7423953", title: "Formación de pilotos" },
+        { id: "b92956e2bfd84409ab17fa98ec774ab9", title: "Formación de mecánicos" },
+        { id: "756c420063a9480887cf140c9834a033", title: "Inglés aeronáutico" },
+        { id: "2bb06fc3f5f546f58727b3ce6d55001a", title: "Experiencia de vuelo" },
+        { id: "840a22a043374342b01519425f07c193", title: "Quiero saber más" }
+    ];
     let requestData = {
         messaging_product: "whatsapp",
         recipient_type: "individual",
@@ -28,43 +35,13 @@ export async function handleTemporal(req, res) {
             },
             "type": "button",
             "action": {
-                "buttons": [
-                    {
+                "buttons": buttons.map((button) => ({
                     "type": "reply",
                     "reply": {
-                        "id": "d7412556-1135-4185-b3d9-e455d7423953",
-                        "title": "Formación de pilotos"
+                        "id": button.id,
+                        "title": button.title
                     }
-                    },
-                    {
-                    "type": "reply",
-                    "reply": {
-                        "id": "b92956e2-bfd8-4409-ab17-fa98ec774ab9",
-                        "title": "Formación de mecánicos"
-                    }
-                    },
-                    {
-                    "type": "reply",
-                    "reply": {
-                        "id": "756c4200-63a9-4808-87cf-140c9834a033",
-                        "title": "Inglés aeronáutico"
-                    }
-                    },
-                    {
-                    "type": "reply",
-                    "reply": {
-                        "id": "2bb06fc3-f5f5-46f5-8727-b3ce6d55001a",
-                        "title": "Experiencia de vuelo"
-                    }
-                    },
-                    {
-                    "type": "reply",
-                    "reply": {
-                        "id": "840a22a0-4337-4342-b015-19425f07c193",
-                        "title": "Quiero saber más"
-                    }
-                    }
-                ]
+                }))
             },
             "header": {
             "text": "Titulo",
@@ -74,6 +51,7 @@ export async function handleTemporal(req, res) {
     };
     let headers = {
             Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+            'Content-Type': 'application/json'
     };
     try {
         // let sending = await axios.post(
@@ -97,61 +75,7 @@ export async function handleTemporal(req, res) {
             method: "POST",
             url: url,
             headers: headers,
-            data: {
-                messaging_product: "whatsapp",
-                recipient_type: "individual",
-                to: "56984327660",
-                type: "interactive",
-                "interactive": {
-                    "body": {
-                        "text": "Texto resumido"
-                    },
-                    "type": "button",
-                    "action": {
-                        "buttons": [
-                            {
-                            "type": "reply",
-                            "reply": {
-                                "id": "d7412556-1135-4185-b3d9-e455d7423953",
-                                "title": "Formación de pilotos"
-                            }
-                            },
-                            {
-                            "type": "reply",
-                            "reply": {
-                                "id": "b92956e2-bfd8-4409-ab17-fa98ec774ab9",
-                                "title": "Formación de mecánicos"
-                            }
-                            },
-                            {
-                            "type": "reply",
-                            "reply": {
-                                "id": "756c4200-63a9-4808-87cf-140c9834a033",
-                                "title": "Inglés aeronáutico"
-                            }
-                            },
-                            {
-                            "type": "reply",
-                            "reply": {
-                                "id": "2bb06fc3-f5f5-46f5-8727-b3ce6d55001a",
-                                "title": "Experiencia de vuelo"
-                            }
-                            },
-                            {
-                            "type": "reply",
-                            "reply": {
-                                "id": "840a22a0-4337-4342-b015-19425f07c193",
-                                "title": "Quiero saber más"
-                            }
-                            }
-                        ]
-                    },
-                    "header": {
-                    "text": "Titulo",
-                    "type": "text"
-                    }
-                }
-            },
+            data: requestData,
         });
 
         return res.status(200).send('OK')
