@@ -97,7 +97,7 @@ export async function handleTemporal(req, res) {
             method: "POST",
             url: url,
             headers: headers,
-            data: requestData,
+            data: {...requestData},
         });
 
         return res.status(200).send('OK')
