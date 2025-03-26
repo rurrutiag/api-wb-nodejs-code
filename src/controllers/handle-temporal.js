@@ -92,14 +92,15 @@ export async function handleTemporal(req, res) {
                 message_id: incomingMessage.id,
             },
         });
-        return res.status(200).send('OK')
-        let sending = await axios({
+        
+        await axios({
             method: "POST",
             url: url,
             headers: headers,
             data: requestData,
         });
-        
+
+        return res.status(200).send('OK')
     } catch (error) {
         return res.status(403).send(error);
     }   
