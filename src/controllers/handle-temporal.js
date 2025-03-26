@@ -24,47 +24,47 @@ export async function handleTemporal(req, res) {
         type: "interactive",
         "interactive": {
             "body": {
-            "text": "Texto resumido"
+                "text": "Texto resumido"
             },
             "type": "button",
             "action": {
-            "buttons": [
-                {
-                "type": "reply",
-                "reply": {
-                    "id": "d7412556-1135-4185-b3d9-e455d7423953",
-                    "title": "Formación de pilotos"
-                }
-                },
-                {
-                "type": "reply",
-                "reply": {
-                    "id": "b92956e2-bfd8-4409-ab17-fa98ec774ab9",
-                    "title": "Formación de mecánicos"
-                }
-                },
-                {
-                "type": "reply",
-                "reply": {
-                    "id": "756c4200-63a9-4808-87cf-140c9834a033",
-                    "title": "Inglés aeronáutico"
-                }
-                },
-                {
-                "type": "reply",
-                "reply": {
-                    "id": "2bb06fc3-f5f5-46f5-8727-b3ce6d55001a",
-                    "title": "Experiencia de vuelo"
-                }
-                },
-                {
-                "type": "reply",
-                "reply": {
-                    "id": "840a22a0-4337-4342-b015-19425f07c193",
-                    "title": "Quiero saber más"
-                }
-                }
-            ]
+                "buttons": [
+                    {
+                    "type": "reply",
+                    "reply": {
+                        "id": "d7412556-1135-4185-b3d9-e455d7423953",
+                        "title": "Formación de pilotos"
+                    }
+                    },
+                    {
+                    "type": "reply",
+                    "reply": {
+                        "id": "b92956e2-bfd8-4409-ab17-fa98ec774ab9",
+                        "title": "Formación de mecánicos"
+                    }
+                    },
+                    {
+                    "type": "reply",
+                    "reply": {
+                        "id": "756c4200-63a9-4808-87cf-140c9834a033",
+                        "title": "Inglés aeronáutico"
+                    }
+                    },
+                    {
+                    "type": "reply",
+                    "reply": {
+                        "id": "2bb06fc3-f5f5-46f5-8727-b3ce6d55001a",
+                        "title": "Experiencia de vuelo"
+                    }
+                    },
+                    {
+                    "type": "reply",
+                    "reply": {
+                        "id": "840a22a0-4337-4342-b015-19425f07c193",
+                        "title": "Quiero saber más"
+                    }
+                    }
+                ]
             },
             "header": {
             "text": "Titulo",
@@ -97,7 +97,61 @@ export async function handleTemporal(req, res) {
             method: "POST",
             url: url,
             headers: headers,
-            data: {...requestData},
+            data: {
+                messaging_product: "whatsapp",
+                recipient_type: "individual",
+                to: "56984327660",
+                type: "interactive",
+                "interactive": {
+                    "body": {
+                        "text": "Texto resumido"
+                    },
+                    "type": "button",
+                    "action": {
+                        "buttons": [
+                            {
+                            "type": "reply",
+                            "reply": {
+                                "id": "d7412556-1135-4185-b3d9-e455d7423953",
+                                "title": "Formación de pilotos"
+                            }
+                            },
+                            {
+                            "type": "reply",
+                            "reply": {
+                                "id": "b92956e2-bfd8-4409-ab17-fa98ec774ab9",
+                                "title": "Formación de mecánicos"
+                            }
+                            },
+                            {
+                            "type": "reply",
+                            "reply": {
+                                "id": "756c4200-63a9-4808-87cf-140c9834a033",
+                                "title": "Inglés aeronáutico"
+                            }
+                            },
+                            {
+                            "type": "reply",
+                            "reply": {
+                                "id": "2bb06fc3-f5f5-46f5-8727-b3ce6d55001a",
+                                "title": "Experiencia de vuelo"
+                            }
+                            },
+                            {
+                            "type": "reply",
+                            "reply": {
+                                "id": "840a22a0-4337-4342-b015-19425f07c193",
+                                "title": "Quiero saber más"
+                            }
+                            }
+                        ]
+                    },
+                    "header": {
+                    "text": "Titulo",
+                    "type": "text"
+                    }
+                }
+            },
         });
 
         return res.status(200).send('OK')
