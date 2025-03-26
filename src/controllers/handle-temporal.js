@@ -21,8 +21,8 @@ export async function handleTemporal(req, res) {
         { id: "d741255611354185b3d9e455d7423953", title: "Formación de pilotos" },
         { id: "b92956e2bfd84409ab17fa98ec774ab9", title: "Formación de mecánicos" },
         { id: "756c420063a9480887cf140c9834a033", title: "Inglés aeronáutico" },
-        { id: "2bb06fc3f5f546f58727b3ce6d55001a", title: "Experiencia de vuelo" },
-        { id: "840a22a043374342b01519425f07c193", title: "Quiero saber más" }
+        // { id: "2bb06fc3f5f546f58727b3ce6d55001a", title: "Experiencia de vuelo" },
+        // { id: "840a22a043374342b01519425f07c193", title: "Quiero saber más" }
     ];
     let requestData = {
         messaging_product: "whatsapp",
