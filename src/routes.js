@@ -5,7 +5,7 @@ import { handleTemporal } from './controllers/handle-temporal.js';
 
 const router = express.Router();
 
-router.post("/", handleTemporal);
+router.post("/", handlePostWebhook);
 router.get("/", handleGetWebhook);
 
 export default router;

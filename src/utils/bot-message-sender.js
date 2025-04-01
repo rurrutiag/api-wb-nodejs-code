@@ -17,17 +17,25 @@ export async function botMessageSender({
         };
         let headers = {
                 Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+                'Content-Type': 'application/json'
         };
         let logRegistry = {step: "Construir mensaje a enviar en botMessageSender", dataSending: requestData};
-        await logRecorder(logRegistry);
     try {    
-        let sending = await axios.post(
-            url,
-            requestData,
-            {headers}
-        );
-        logRegistry = { step: "Resultado de usar axios en botMessageSender", axios: sending };
         await logRecorder(logRegistry);
+        console.log("Datos para la solicitud axios");
+        console.log("method","POST");
+        console.log("url",url);
+        console.log("headers",headers);
+        console.log("data",requestData);
+        let sending = await axios({
+            method: "POST",
+            url: url,
+            headers: headers,
+            data: requestData
+        });
+        console.log("sending", sending.data.messages);
+        // logRegistry = { step: "Resultado de usar axios en botMessageSender", "axios": sending };
+        // await logRecorder(logRegistry);
         return true;
     } catch (error) {
         await logRecorder({

@@ -9,6 +9,7 @@ import { createServer } from 'http';
 
 import router from './routes.js';
 import { initialize } from './cache/initialize.js';
+import { flowCreator } from './services/new-flow.js';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use(express.json()); // Analizar JSON en solicitudes
 app.use(cors({ origin: corsOrigin, methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', credentials: true }));  
 app.use(express.static(path.join(__dirname, '../public'))); // Servir archivos estáticos  
 app.use('/webhook', router);
+app.use('/inject-wonders', flowCreator);
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/index.html'));
 });

@@ -145,7 +145,7 @@ export async function handlePostWebhook(req, res) {
         await logRecorder(logRegistry);
 
         if (botSentMessage) {
-            return res.sendStatus(200); // Éxito
+            return res.status(200).send('OK'); // Éxito
         } else {
             return res.status(500).json({ error: "No se envió el mensaje" });    
         }

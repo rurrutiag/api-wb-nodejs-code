@@ -18,11 +18,11 @@ export async function handleTemporal(req, res) {
     const receiver = "515186325014152";
     let url = `${WAB_API_URL}/${receiver}/messages`;
     const buttons = [
-        { id: "d741255611354185b3d9e455d7423953", title: "Formación de pilotos" },
-        { id: "b92956e2bfd84409ab17fa98ec774ab9", title: "Formación de mecánicos" },
-        { id: "756c420063a9480887cf140c9834a033", title: "Inglés aeronáutico" },
-        // { id: "2bb06fc3f5f546f58727b3ce6d55001a", title: "Experiencia de vuelo" },
-        // { id: "840a22a043374342b01519425f07c193", title: "Quiero saber más" }
+        { id: "d741255611354185b3d9e455d7423953", title: "Formación de pilotos", description: "Contamos con programas en Chile 🇨🇱 y EEUU 🇺🇸" },
+        { id: "b92956e2bfd84409ab17fa98ec774ab9", title: "Formación de mecánicos 🇺🇸", description: "Formación con residencia e inserción laboral. _Cupos limitados_" },
+        { id: "756c420063a9480887cf140c9834a033", title: "Inglés aeronáutico", description: "Preparación para *certificación OACI* o mejorar inglés en la aviación." },
+        { id: "2bb06fc3f5f546f58727b3ce6d55001a", title: "Experiencias de vuelo", description: "Vive en primera persona lo que significa ser piloto." }
+        // { id: "840a22a043374342b01519425f07c193", title: "Experiencias de vuelo", description: "Vive en primera persona lo que significa ser piloto." }
     ];
     let requestData = {
         messaging_product: "whatsapp",
@@ -30,23 +30,57 @@ export async function handleTemporal(req, res) {
         to: "56984327660",
         type: "interactive",
         "interactive": {
-            "body": {
-                "text": "Texto resumido"
-            },
-            "type": "button",
-            "action": {
-                "buttons": buttons.map((button) => ({
-                    "type": "reply",
-                    "reply": {
-                        "id": button.id,
-                        "title": button.title
-                    }
-                }))
-            },
+            "type": "list",
             "header": {
-            "text": "Titulo",
-            "type": "text"
-            }
+                "text": "Descubre nuestras oportunidades en el mundo aeronáutico",
+                "type": "text"
+            },
+            "body": {
+                "text": "Contamos con diferentes opciones en el mundo aeronáutico. Al presionar en el botón *Ver opciones* de este mensaje, verás una lista con los servicios que podemos brindarte."
+            },
+            "footer": {
+                "text": "Deberás seleccionar una opción para saber más información."
+            },
+            "action": {
+                "sections": [
+                    {
+                        "title": "Formación de pilotos",
+                        "rows": [
+                            {
+                                "id": "d741255611354185b3d9e455d7423953",
+                                "title": "Formación en EEUU🇺🇸",
+                                "description": "Programa con estándares americanos con residencia e inclusión laboral."
+                            },
+                            {
+                                "id": "b92956e2bfd84409ab17fa98ec774ab9",
+                                "title": "Formación en Chile🇨🇱",
+                                "description": "Programas flexibles para obtener hasta la licencia de piloto comercial."
+                            }
+                        ]
+                    },
+                    {
+                        "title": "Otros servicios",
+                        "rows": [
+                            {
+                                "id": "756c420063a9480887cf140c9834a033",
+                                "title": "Formación de mecánicos",
+                                "description": "Formación en 🇺🇸 con residencia e inserción laboral."
+                            },
+                            {
+                                "id": "2bb06fc3f5f546f58727b3ce6d55001a",
+                                "title": "Inglés aeronáutico",
+                                "description": "Preparación para certificación OACI o mejorar inglés en la aviación."
+                            },
+                            {
+                                "id": "840a22a043374342b01519425f07c193",
+                                "title": "Experiencias de vuelo",
+                                "description": "Vive en primera persona lo que significa ser piloto."
+                            }
+                        ]
+                    },
+                ],
+                "button": "Ver opciones"
+            },
         }
     };
     let headers = {
@@ -59,7 +93,6 @@ export async function handleTemporal(req, res) {
         //     requestData,
         //     {headers}
         // );
-        console.log("aqui estoy");
         await axios({
             method: "POST",
             url: url,
