@@ -1,6 +1,7 @@
 import { setCache, getCache } from "../cache/manager.js";
 import { queryDb } from "../db/db-query.js";
 import { getFlowKey } from "./get-flow-key.js";
+import { logRecorder } from "./log-recorder.js";
 
 /**
  * Inicia un nuevo flujo en la base de datos y genera una clave de sesión única.
@@ -20,6 +21,7 @@ import { getFlowKey } from "./get-flow-key.js";
  */
 export async function flowInitiator({company,business,user,flow}){
     try {
+        let logRegistry = {};
         // Consulta para obtener el número de flujo más alto y asignar el siguiente
         let query = `
             SELECT COALESCE(MAX(flow_number), 0) + 1 AS quantity
@@ -38,6 +40,12 @@ export async function flowInitiator({company,business,user,flow}){
         ];
         // Ejecutar la consulta en la base de datos para obtener el nuevo número de flujo
         const newFlowNumber = await queryDb(query, params, false);
+
+            logRegistry = {
+                step: "flowInitiator: newFlowNumber",
+                results: newFlowNumber
+            };
+            await logRecorder(logRegistry);
         
         // Crear la clave de sesión única basada en el número de flujo obtenido
         query = `
@@ -53,6 +61,12 @@ export async function flowInitiator({company,business,user,flow}){
             newFlowNumber[0].quantity
         ];
         const newFlowId = await queryDb(query, params, false);
+
+            logRegistry = {
+                step: "flowInitiator: newFlowId",
+                results: newFlowId
+            };
+            await logRecorder(logRegistry);
         
         // Generar la clave base del flujo
         const keyBase = getFlowKey({
@@ -63,6 +77,12 @@ export async function flowInitiator({company,business,user,flow}){
         });
         // Crear la clave de sesión única basada en el número de flujo obtenido
         const sessionKeyDB = `${keyBase}:number:${newFlowNumber[0].quantity}`;
+
+            logRegistry = {
+                step: "flowInitiator: sessionKeyDB",
+                results: sessionKeyDB
+            };
+            await logRecorder(logRegistry);
 
         return sessionKeyDB;
     } catch (e) {
