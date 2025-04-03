@@ -1,4 +1,4 @@
-import { getCache } from "../cache/manager.js";
+import { queryDb } from "../db/db-query.js";
 /**
  * Obtiene el último mensaje enviado por el "from" dentro de una sesión específica.
  *
@@ -6,33 +6,73 @@ import { getCache } from "../cache/manager.js";
  * @param {string} params.flowSession - La clave de la sesión en la caché.
  * @param {string} params.from - De quien es el mensaje: receiver o sender.
  * @returns {Object|null} El último mensaje del "from" con el índice más alto o `null` si no hay mensajes.
- *
- * @example
- * // Datos en caché:
- * {
- *   "interactions": [
- *     { "index": 1, "from": "sender", "type": "message", "content": { "text": "hola" } },
- *     { "index": 2, "from": "receiver", "type": "message", "content": { "text": "Hola, ¿cómo estás?" }, "item_id": "item_1" },
- *     { "index": 3, "from": "sender", "type": "message", "content": { "text": "Bien, gracias" } },
- *     { "index": 4, "from": "receiver", "type": "message", "content": { "text": "Me alegro" }, "item_id": "item_2" }
- *   ]
- * }
- *
- * lastMessageFinder({ flowSession: "session:company_id:wab:receive:numero:sender:numero:flow:flow_id", from: "receiver" });
- * // Retorna: { "index": 4, "from": "receiver", "type": "message", "content": { "text": "Me alegro" }, "item_id": "item_2" }
  */
-export function lastMessageFinder({flowSession, from}){
-    // Search last message
-    const sessionData = getCache(`session[${flowSession}]`)?.interactions || [];
-    // Filter messages from...
-    const fromMessages = sessionData.filter(msg => msg.from === from);
-    // If exist messages from '..', get the higher message index
-    if (fromMessages.length > 0) {
-        return fromMessages.reduce(
-            (lastMesssage, currentMessage) => {
-                return currentMessage.index > lastMesssage.index ? currentMessage : lastMesssage;
-            }
-        );
+export async function lastMessageFinder({flowData, from=null}){
+    const { company, receive, sender, flow, flowNumber } = flowData;
+    let query;
+    let params;
+    // Capturamos los mensajes para el flujo en ejecución
+    if (from !== null){
+        query = `
+            SELECT id, interaction_index, from, content_type, content, previous_item_id, metadata
+            FROM messages
+            WHERE
+                platform = "wab" AND
+                company_id = $1 AND
+                company_media = $2 AND
+                user_media = $3 AND
+                flow_id = $4 AND
+                flow_number = $5 AND
+                "from" = $6
+            ORDER BY interaction_index DESC
+            LIMIT 1
+        `;
+        params = [
+            company,
+            receive,
+            sender,
+            flow,
+            flowNumber,
+            from
+        ];
+    } else {
+        query = `
+            SELECT id, interaction_index, from, content_type, content, previous_item_id, metadata
+            FROM messages
+            WHERE
+                platform = "wab" AND
+                company_id = $1 AND
+                company_media = $2 AND
+                user_media = $3 AND
+                flow_id = $4 AND
+                flow_number = $5
+            ORDER BY interaction_index DESC
+            LIMIT 1
+        `;
+        params = [
+            company,
+            receive,
+            sender,
+            flow,
+            flowNumber,
+            from
+        ];
     }
-    return null;
+    const dbResponse = await queryDb(query, params, false);
+    // Search last message
+    if (dbResponse && dbResponse.length > 0) {
+        const row = dbResponse[0];
+        return {
+            item_id: row.id,
+            interaction_index: row.interaction_index,
+            from: row.from,
+            content_type: row.content_type,
+            content: row.content,
+            previous_item_id: row.previous_item_id,
+            metadata: row.metadata
+        };
+    } else {
+        console.log("lastMessageFinder","No se encontraron resultados");
+        return null;
+    }
 }

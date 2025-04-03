@@ -109,7 +109,7 @@ export async function handlePostWebhook(req, res) {
         });    
 
         // Obtener la respuesta del flujo si aplica
-        const flowResponse = responseManager({
+        const flowResponse = await responseManager({
             sessionFlowKey: flowFound.flow_id,
             messageRequest: incomingMessage,
             firstMessageId: flowFound.first_item_id

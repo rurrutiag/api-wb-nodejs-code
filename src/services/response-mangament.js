@@ -1,170 +1,86 @@
-import { getCache } from "../cache/manager.js";
+import { flowMessageHunter } from "../utils/flow-message-hunter.js";
 import { getFlowData } from "../utils/get-flow-key.js";
 import { lastMessageFinder } from "../utils/last-message-finder.js";
 
 /**
- * Obtiene el tipo de contenido y la respuesta esperada según el último mensaje enviado por el bot (receiver).
- *
- * @param {Object} params - Objeto con los parámetros de búsqueda.
- * @param {string} params.sessionFlowKey - La clave de la sesión en la caché.
- * @param {string} params.flowId - La clave del flujo en la caché.
- * @returns {Object|null} Un objeto con `content_type` y `type_expected_response`, o `null` si no se encuentra.
- *
- * @example
- * // Datos en caché:
- * session["session:company_id:wab:receive:numero:sender:numero:flow:flow_id"].interactions = [
- *   { "index": 1, "from": "sender", "type": "message", "content": { "text": "hola" } },
- *   { "index": 2, "from": "receiver", "type": "message", "content": { "text": "Hola, ¿cómo estás?" }, "item_id": "item_1" }
- * ];
- *
- * flow["flow:flow_id"] = [
- *   { "item_id": "item_1", "content_type": "text", "type_expected_response": "button" }
- * ];
- *
- * getExpectedMessageType({ sessionFlowKey: "12345", flowId: "flow1" });
- * // Retorna: { content_type: "text", type_expected_response: "button" || [{}, ... {}] }
+ * Busca el mensaje esperado en función de la información de la sesión y el remitente.
+ * Esta función determina el último mensaje enviado por un bot y busca el mensaje correspondiente
+ * en los datos del flujo de mensajes, basándose en el `item_id` del último mensaje.
+ * Si se encuentra un mensaje correspondiente, devuelve los detalles esperados del mensaje.
+ * 
+ * @param {Object} params - Objeto con los datos necesarios para realizar la búsqueda.
+ * @param {Object} params.sessionData - Datos de la sesión que incluyen información del flujo de trabajo.
+ * @param {string} params.sessionData.company - El ID de la empresa.
+ * @param {string} params.sessionData.receive - El número del negocio.
+ * @param {string} params.sessionData.sender - El número del usuario que contacta.
+ * @param {string} params.sessionData.flow - El ID del flujo de mensajes.
+ * @param {string|number} params.sessionData.flowNumber - El número del flujo de mensajes.
+ * @param {string} params.messageFrom - Indica si el mensaje proviene de "business" o "user".
+ * 
+ * @returns {Promise<Object|null>} Un objeto con los detalles del mensaje esperado si se encuentra, 
+ * o `null` si no se encuentra el mensaje.
+ * 
+ * @throws {Error} Lanza un error si ocurre un problema durante la búsqueda de los mensajes.
  */
-function getExpectedMessageType({sessionFlowKey, flowId}){
-    const lastMessageSentByBot = lastMessageFinder({flowSession: sessionFlowKey, from: "receiver"});
+async function getExpectedMessage({sessionData, messageFrom, fromFlow}){
+    // Obtener el último mensaje enviado por el bot
+    const lastMessageSentByBot = await lastMessageFinder({flowData: sessionData, from: messageFrom});
+    
+    // Si no se encontró el mensaje del bot o no tiene un item_id, retornamos null
     if (!lastMessageSentByBot || !lastMessageSentByBot.item_id) return null;
     const itemIdtoSearchFor = lastMessageSentByBot.item_id;
-    const fromFlow = getCache(`flow:${flowId}`);
-    const message = fromFlow.find(
-        item => item.item_id === itemIdtoSearchFor
-    );
+    
+    let message = null;
+    let actionIds = [];
+    // Buscar el mensaje en el flujo
+    if (fromFlow && fromFlow.length > 0) {
+        fromFlow.forEach((row) => {
+            if (row.item_id === itemIdtoSearchFor) {
+                message = row;
+                if (row.next_item_id && Array.isArray(row.next_item_id.next_items)) {
+                    // Recorremos el array `next_items` dentro de `item.next_item_id`
+                    row.next_item_id.next_items.forEach(nextItem => {
+                        // Verificamos si el objeto dentro de `next_items` tiene la propiedad `action_id` y `next_item_id`
+                        if (nextItem.action_id && nextItem.next_item_id) {
+                            // Usamos `action_id` como clave y `next_item_id` como valor
+                            actionIds[nextItem.action_id] = nextItem.next_item_id;
+                        }
+                    });
+                }    
+            }
+        })
+    }
+    
+    // Si se encuentra el mensaje, retornar los detalles esperados del mensaje
     return message ? {
+        item_id: itemIdtoSearchFor,
         content_type: message.content_type,
-        type_expected_response: message.type_expected_response
+        content: message.content,
+        type_expected_response: message.type_expected_response,
+        previous_item_id: message.previous_item_id,
+        actions: actionIds,
+        metadata: message.metadata
     } : null;
 }
 
-/**
- * Obtiene todos los valores de `action_id` dentro del array `next_item_id` de un flujo almacenado en caché.
- *
- * @param {string} flowKey - La clave del flujo en la caché, por ejemplo, "flow:sfnsdlgfnasdñgnñ".
- * @returns {string[]} Un array con todos los `action_id` encontrados en `next_item_id`.
- *
- * @example
- * // Datos en caché:
- * [
- * {}, ...,
- * {
- *   "platform": "...",
- *   "item_id": "...",
- *   "content_type": "...",
- *   "content": "...",
- *   "type_expected_response": "...",
- *   "previous_item_id": "...",
- *   "next_item_id": [
- *     { "action_id": "action_1", "next_item_id": "item_2" },
- *     { "action_id": "action_2", "next_item_id": "item_3" },
- *     { "action_id": "action_3", "next_item_id": "item_4" }
- *   ]
- * }
- * ]
- * 
- * expectedResponses("flow:clave-en-uuid4");
- * // Retorna: ["action_1", "action_2", "action_3"]
- */
-function expectedResponses({
-    flowKey
-}) {
-    const flowData = getCache(flowKey) || {};
-    let actionIds = [];
-    flowData.forEach(item => {
-        if (Array.isArray(item.next_item_id)) {
-            actionIds = actionIds.concat(item.next_item_id.map(
-                next => next.action_id
-            ));
-        }
-    });
-    return actionIds;
-}
-
-/**
- * Obtiene el siguiente mensaje en un flujo de conversación basado en respuestas esperadas.
- *
- * @param {Object} params - Parámetros de la función.
- * @param {string} params.flowKey - Clave única del flujo de conversación.
- * @param {string[]} params.expectedResponses - Respuestas esperadas para determinar el siguiente paso.
- * @returns {Object|null} - Retorna un objeto con el contenido del siguiente mensaje (`content_type` y `content`), o `null` si no hay coincidencias.
- *
- * @example
- * // Ejemplo de flujo almacenado en caché:
- * // [
- * //   { item_id: "1", next_item_id: [
- * //       { action_id: "yes", next_item_id: "2" },
- * //       { action_id: "no", next_item_id: "3" }
- * //   ] },
- * //   { item_id: "2", content_type: "text", content: "You selected YES!" },
- * //   { item_id: "3", content_type: "text", content: "You selected NO!" }
- * // ]
- *
- * const response = nextFlowMessage({
- *     flowKey: "example",
- *     expectedResponses: ["yes"]
- * });
- * console.log(response); // { content_type: "text", content: "You selected YES!" }
- */
-function nextFlowMessage({
-    flowKey,
-    expectedResponses
-}) {
-    const flowData = getCache(`flow["flow:${flowKey}"]`) || {};
-    let matchedNextItemId = null;
-    for (const item of flowData) {
-        if (Array.isArray(item.next_item_id)) {
-            const match = item.next_item_id.find(
-                next => expectedResponses.includes(
-                    next.action_id
-                )
-            );
-            if (match) {
-                matchedNextItemId = match.next_item_id;
-                break;
-            }
-        }
-    }
-    if (matchedNextItemId) {
-        return dataHunterFromFlowItem({
-            flowKey: flowKey,
-            itemIdToUse: matchedNextItemId
-        });
-    }
-    return null;
-}
 
 /**
  * Recupera el contenido de un ítem específico dentro de un flujo de conversación.
  *
  * @param {Object} params - Parámetros de la función.
- * @param {string} params.flowKey - Clave única del flujo de conversación.
+ * @param {Object} params.fromFlow - Objeto con el flujo de mensajes.
  * @param {string} params.itemIdToUse - Identificador del ítem dentro del flujo.
  * @returns {Object|null} - Retorna un objeto con el contenido del ítem (`content_type` y `content`), o `null` si no se encuentra.
  *
- * @example
- * // Ejemplo de flujo almacenado en caché:
- * // [
- * //   { item_id: "1", content_type: "text", content: "Hello, world!" },
- * //   { item_id: "2", content_type: "image", content: "https://example.com/image.png" }
- * // ]
- *
- * const response = dataHunterFromFlowItem({
- *     flowKey: "example",
- *     itemIdToUse: "1"
- * });
- * console.log(response); // { content_type: "text", content: "Hello, world!" }
  */
-function dataHunterFromFlowItem({flowKey, itemIdToUse}){
-    const flowData = getCache(`flow:${flowKey}`) || {};
-    const itemData = flowData.find(
-        item => item.item_id === itemIdToUse
-    );
-    if (itemData) {
-        const { content_type, content } = itemData;
-        return { content_type, content };
-    }
-    return null;
+function dataHunterFromFlowItem({fromFlow, itemIdToUse}){
+    let itemData = {};
+    fromFlow.forEach((row) => {
+        if (row.item_id === itemIdToUse) {
+            itemData = row;
+        }
+    })
+    return itemData.length > 0 ? itemData : null;
 }
 
 /**
@@ -172,58 +88,44 @@ function dataHunterFromFlowItem({flowKey, itemIdToUse}){
  *
  * @param {Object} params - Parámetros de la función.
  * @param {Object} params.messageRequest - Objeto que representa el mensaje recibido.
- * @param {Object} params.expectedTypeResponse - Tipo de respuesta esperada (ej. "text", "interactive").
- * @param {string[]} params.expectedResponses - Lista de respuestas esperadas para validar coincidencias.
- * @returns {boolean} - Retorna `true` si el mensaje recibido coincide con lo esperado, de lo contrario `false`.
+ * @param {Object} params.expectedResponse - Objeto del último mensaje del bot que incluye el tipo de respuesta esperada (ej. "text", "interactive") y la lista de respuestas esperadas para validar coincidencias.
+ * @returns {boolean} - Retorna el id del siguiente mensaje si coincide con lo esperado, de lo contrario `false`.
  *
  * @description
  * La función evalúa el tipo de mensaje recibido y lo compara con el tipo y contenido esperados.
  * - Los mensajes pueden ser de tipo: `text`, `button`, `reaction`, `image`, `sticker`, `unknown`, `interactive`.
- * - Si el mensaje es `interactive`, valida que el tipo coincida y que el `id` de la respuesta esté en `expectedResponses`.
+ * - Si el mensaje es `interactive`, valida que el tipo coincida y que el `id` de la respuesta esté en `expectedResponse`.
  * - Si el mensaje es `text`, descarta aquellos que contienen `referral` o `context` y valida el tipo esperado.
- *
- * @example
- * // Ejemplo de mensaje recibido de tipo interactivo:
- * const messageRequest = {
- *   type: "interactive",
- *   0: {
- *     interactive: {
- *       type: "button",
- *       button: { id: "option_1" }
- *     }
- *   }
- * };
- *
- * const response = receivedMessageMatchesExpectedResponse({
- *   messageRequest,
- *   expectedTypeResponse: { type: "button" },
- *   expectedResponses: ["option_1", "option_2"]
- * });
- * console.log(response); // true
  *
  * @see {@link https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks/payload-examples} - Más información sobre los payloads de WhatsApp Cloud API.
  */
-function receivedMessageMatchesExpectedResponse({messageRequest, expectedTypeResponse, expectedResponses}){
-    // Hay mensajes recibidos que tienen la clave type y puede ser: text, button, reaction, image, sticker, uknown, interactive
+function receivedMessageMatchesExpectedResponse({messageRequest, expectedResponse}){
+    // falta considerar el análisis de mensaje si lo indica metadata
+    // messageRequest viene de req.body.entry[0].changes.messages
+    let nextMessageId;
     if (messageRequest.type) {
         if (messageRequest.type === "interactive") {
-            if (messageRequest[0]?.interactive?.type === expectedTypeResponse.type) {
+            if (messageRequest[0]?.interactive?.type === expectedResponse.type_expected_response.type) {
                 // Validamos que los type coinciden, luego que el id de la respuesta, entre dentro de las esperadas
-                const itemIdReply = messageRequest[0].interactive[expectedTypeResponse.type]?.id;
-                return expectedResponses.includes(itemIdReply);
+                const itemIdReply = messageRequest[0].interactive[expectedResponse.type_expected_response.type]?.id;
+                // return expectedResponses.includes(itemIdReply);
+                // buscará que itemIdReply esté presente en las actions de expectedResponse (verdadero o falso)
+                if (expectedResponse.actions.hasOwnProperty(itemIdReply)){
+                    nextMessageId = expectedResponse.actions[itemIdReply];
+                }
             } else {
                 return false;
             }
         }
         if (messageRequest.type === "text") {
             // El usuario respondió con un texto cuando se espera otro tipo de mensaje
-            if (messageRequest.type !== expectedTypeResponse.type) { return false; }
+            if (messageRequest.type !== expectedResponse.type_expected_response.type) { return false; }
             // Para el caso que el usuario hizo clíck en un anuncio con un call-2-action a WhatsApp (para medir conversión)
             if (messageRequest.includes("referral")) { return false;}
             // Para el caso que el usuario solicita más información sobre un producto (responde a mensajes de un produto o varios, o accede al catalogo desde otro punto)
             if (messageRequest.includes("context")) { return false; }
             // Si no es ninguno de los casos, se espera que sea un texto normal. Para este primer paso no validaremos el tipo de texto
-            return true;
+            return expectedResponse.actions[expectedResponse.item_id];
         }
     }
     return false;
@@ -266,46 +168,47 @@ function receivedMessageMatchesExpectedResponse({messageRequest, expectedTypeRes
  *
  * @see {@link https://developers.facebook.com/docs/whatsapp/cloud-api} - WhatsApp Cloud API para integración de mensajes.
  */
-export function responseManager({
+export async function responseManager({
     sessionFlowKey,
     messageRequest = null,
     firstMessageId = null
 }){
     const flowData = getFlowData({flowSession: sessionFlowKey});
     
-    const flowId = flowData.flow;
+    const fromFlow = await flowMessageHunter({flow: flowData.flow});
+
     // Si se recibe un ID de mensaje inicial, se recupera directamente (es trigger)
     if (firstMessageId !== null) {
         
         return dataHunterFromFlowItem({
-            flowKey: flowId,
+            fromFlow: fromFlow,
             itemIdToUse: firstMessageId
         });
     }
-    // Obtener el tipo de respuesta esperada basado en el último mensaje enviado por el bot
-    const typeExpectedResponse = getExpectedMessageType({
-        sessionFlowKey: sessionFlowKey,
-        flowId: flowId
+    // Obtener respuesta esperada basado en el último mensaje enviado por el bot
+    const expectedResponse = await getExpectedMessage({
+        sessionData: flowData,
+        messageFrom: "business",
+        fromFlow: fromFlow
     });
     // Si existe un tipo de respuesta esperada
-    if (typeExpectedResponse) {
+    if (expectedResponse) {
         // Obtener las respuestas esperadas para el flujo actual
-        const expected = expectedResponses({ flowKey: `flow[flow:${flowId}]` });
         // Validar si el mensaje entrante coincide con las respuestas esperadas
         const isMatch = receivedMessageMatchesExpectedResponse({
             messageRequest: messageRequest,
-            expectedTypeResponse: typeExpectedResponse,
-            expectedResponses: expected
+            expectedResponse: expectedResponse
         });
-        // Si el mensaje recibido es válido según el flujo, obtener el siguiente mensaje
+        let nextMessageObject = {};
         if (isMatch) {
-            const nextItem = nextFlowMessage({
-                flowKey: flowId,
-                expectedResponses: expected
-            });
-            return nextItem ? nextItem : null;
+            fromFlow.forEach((row) => {
+                if (row.item_id === isMatch) {
+                    nextMessageObject = row;
+                }
+            })
         }
-        return null;
+        // Si el mensaje recibido es válido según el flujo, obtener el siguiente mensaje
+        return isMatch ? nextMessageObject : null;
     }
     return null;
 }

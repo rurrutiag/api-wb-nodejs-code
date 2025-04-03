@@ -1,5 +1,4 @@
-import { getCache } from "../cache/manager.js";
-import { getBaseFlowKey } from "./get-flow-key.js";
+import { queryDb } from "../db/db-query.js";
 
 /**
  * Busca flujos activos asociados a una empresa, receptor y remitente específicos.
@@ -10,33 +9,35 @@ import { getBaseFlowKey } from "./get-flow-key.js";
  * @param {string} params.sender - Identificador del remitente del mensaje.
  * @returns {string[] | null} Un array con las claves de los flujos activos si existen, o `null` si no hay coincidencias.
  */
-export function flowFinder({
+export async function flowFinder({
     companyId, receiver, sender
 }) {
-    const sessionKey = getBaseFlowKey({
-        companyId: companyId,
-        receiver: receiver,
-        sender: sender
-    });
-    
-    const allSessions = Object.keys(getCache("sessions") || {});
-
-    const matchingKeys = allSessions.filter( key =>
-        key.startsWith(
-            `${sessionKey}:flow:`
-        )
-    );
-    if (matchingKeys.length > 0) {
-        let activeFlow;
-        matchingKeys.forEach(
-            key => {
-                if (allSessions[key] && allSessions[key].status === "active") {
-                    activeFlow = key;
-                }
-            }
-        );
-        return activeFlow;
-    } else {
-        return null;
+    try {
+        let query = `
+            SELECT *
+            FROM started_flows
+            WHERE
+                active = $1 AND
+                company_id = $2 AND
+                company_media = $3 AND
+                user_media = $4 AND
+                platform = $5
+            ORDER BY created_at DESC
+        `;
+        let params = [
+            true,
+            companyId,
+            receiver,
+            sender,
+            "wab"
+        ];
+        let dbResponse = await queryDb(query, params, false);
+        if (dbResponse.length > 0) {
+            return dbResponse[0];
+        } else {
+            return null;
+        }
+    } catch (error) {
+        throw new Error(`Error en flowFinder: ${e.message}`);
     }
 }

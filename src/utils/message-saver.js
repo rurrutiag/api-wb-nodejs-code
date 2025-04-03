@@ -1,6 +1,6 @@
-import { addToCacheArrayInArray, getCacheObjectLength, getNestedCacheValue } from "../cache/manager.js";
 import { queryDb } from "../db/db-query.js";
 import { getFlowData } from "./get-flow-key.js"
+import { lastMessageFinder } from "./last-message-finder.js";
 
 export async function messageSaver({
     flowSession,
@@ -9,41 +9,21 @@ export async function messageSaver({
     contentType}) {
         try {
             const flowData = getFlowData({flowSession: flowSession});
-
-            let interactionsNumber = getCacheObjectLength("session", flowSession, "interactions");
+            const lastItem = await lastMessageFinder({
+                flowSession: flowData
+            });
+            let interactionsNumber = Number(lastItem.flowNumber);
             
             let newInteractionsNumber = interactionsNumber + 1;
-            const lastItemId = getNestedCacheValue({
-                key: "session",
-                subKey: flowSession,
-                nestedKey: "interactions",
-                itemKey: "index",
-                valueKey: interactionsNumber,
-                returnKey: "id"
-            });
-            // Save in database
-            // Table columns
-                // id varchar(36)
-                // platform varchar(255)
-                // interaction_index integer
-                // company_id varchar(36)
-                // company_media varchar(255)
-                // user_media varchar(255)
-                // flow_id varchar(36)
-                // flow_number integer
-                // from varchar(8)
-                // content_type varchar(50)
-                // content jsonb
-                // sent_at timestamp not null default now()
-                // previous_item_id varchar(36)
-                // metadata jsonb
+            const lastItemId = lastItem.id;
+
             let query = `
                 INSERT INTO messages(platform, interaction_index, company_id, company_media, user_media, flow_id, flow_number, "from", content_type, content, previous_item_id)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11)
                 RETURNING id;
             `;
-            let sentBy;
-            if (actor === "receiver" || actor === "business") {
+            let sentBy = actor;
+            if (actor === "receiver") {
                 sentBy = "business";
             } else {
                 sentBy = "user";
@@ -62,20 +42,7 @@ export async function messageSaver({
                 lastItemId
             ];
             const newMessage = await queryDb(query, params, false);
-            // Save in cache
-            const cacheArray = {
-                index: newInteractionsNumber,
-                from: actor,
-                content: content,
-                type: contentType,
-                id: newMessage[0]["id"]
-            };
-            addToCacheArrayInArray({
-                key: "session",
-                arrayKey: flowSession,
-                subArrayKey: "interactions",
-                newValue: {...cacheArray}
-            });
+
             return true;
         } catch (e) {
             console.error("Error al guardar el mensaje:", e);

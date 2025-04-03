@@ -1,3 +1,4 @@
+import { flowArchiver } from "../utils/flow-archiver.js";
 import { flowFinder } from "../utils/flow-finder.js";
 import { flowInitiator } from "../utils/flow-initiator.js";
 import { logRecorder } from "../utils/log-recorder.js";
@@ -26,22 +27,31 @@ export async function flowReviewer({
     res, companyId, companyMedia, userMedia, messageData
 }) {
     try {
-        // Hay flujo activo? Este se debe pasar a la base de datos
-        let flowFound = flowFinder({
+        // Buscaremos los flujos activos
+        let flowFound = await flowFinder({
             companyId: companyId,
             receiver: companyMedia,
             sender: userMedia
         });
+        // Tambien validaremos que el mensaje entrante sea un trigger
+        const triggerFound = await triggerFinder({
+            companyId: companyId,
+            message: messageData
+        });
+        // Si el mensaje es trigger, cerraremos los flujos activos
+        if (triggerFound !== null) {
+            await flowArchiver({
+                company_id: companyId,
+                company_media: companyMedia,
+                user_media: userMedia,
+                all_flows: true
+            });
+            flowFound = null;
+        }
 
         let firstTriggerMessage = null;
 
         if (flowFound === null) {
-            // Si no hay flujo, revisaremos que entonces sea un trigger
-            const triggerFound = await triggerFinder({
-                companyId: companyId,
-                message: messageData
-            });
-
             await logRecorder({
                 step: "flowReviewer: flowFound es null",
                 triggerFound: triggerFound
@@ -91,6 +101,6 @@ export async function flowReviewer({
             first_item_id: firstTriggerMessage
         };
     } catch(e) {
-        throw new Error(`Error en flow-reviewver: ${e.message}`);
+        throw new Error(`Error en flow-reviewer: ${e.message}`);
     }  
 }
