@@ -3,21 +3,21 @@ import { queryDb } from "../db/db-query.js";
  * Obtiene el último mensaje enviado por el "from" dentro de una sesión específica.
  *
  * @param {Object} params - Objeto con los parámetros de búsqueda.
- * @param {string} params.flowSession - La clave de la sesión en la caché.
+ * @param {Object} params.flowData - La clave de la sesión en la caché.
  * @param {string} params.from - De quien es el mensaje: receiver o sender.
  * @returns {Object|null} El último mensaje del "from" con el índice más alto o `null` si no hay mensajes.
  */
 export async function lastMessageFinder({flowData, from=null}){
-    const { company, receive, sender, flow, flowNumber } = flowData;
+    const { company_id, company_media, user_media, flow_id, flow_number } = flowData;
     let query;
     let params;
     // Capturamos los mensajes para el flujo en ejecución
     if (from !== null){
         query = `
-            SELECT id, interaction_index, from, content_type, content, previous_item_id, metadata
+            SELECT id, interaction_index, "from", content_type, content, previous_item_id, metadata
             FROM messages
             WHERE
-                platform = "wab" AND
+                platform = 'wab' AND
                 company_id = $1 AND
                 company_media = $2 AND
                 user_media = $3 AND
@@ -28,19 +28,19 @@ export async function lastMessageFinder({flowData, from=null}){
             LIMIT 1
         `;
         params = [
-            company,
-            receive,
-            sender,
-            flow,
-            flowNumber,
+            company_id,
+            company_media,
+            user_media,
+            flow_id,
+            flow_number,
             from
         ];
     } else {
         query = `
-            SELECT id, interaction_index, from, content_type, content, previous_item_id, metadata
+            SELECT id, interaction_index, "from", content_type, content, previous_item_id, metadata
             FROM messages
             WHERE
-                platform = "wab" AND
+                platform = 'wab' AND
                 company_id = $1 AND
                 company_media = $2 AND
                 user_media = $3 AND
@@ -50,12 +50,11 @@ export async function lastMessageFinder({flowData, from=null}){
             LIMIT 1
         `;
         params = [
-            company,
-            receive,
-            sender,
-            flow,
-            flowNumber,
-            from
+            company_id,
+            company_media,
+            user_media,
+            flow_id,
+            flow_number
         ];
     }
     const dbResponse = await queryDb(query, params, false);
@@ -72,7 +71,6 @@ export async function lastMessageFinder({flowData, from=null}){
             metadata: row.metadata
         };
     } else {
-        console.log("lastMessageFinder","No se encontraron resultados");
         return null;
     }
 }

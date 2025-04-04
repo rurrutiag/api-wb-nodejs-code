@@ -20,20 +20,29 @@ export async function botMessageSender({
                 'Content-Type': 'application/json'
         };
         let logRegistry = {step: "Construir mensaje a enviar en botMessageSender", dataSending: requestData};
+        let sending;
     try {    
         await logRecorder(logRegistry);
-        console.log("Datos para la solicitud axios");
-        console.log("method","POST");
-        console.log("url",url);
-        console.log("headers",headers);
-        console.log("data",requestData);
-        let sending = await axios({
+        console.log("botMessageSender");
+        console.log("url", url);
+        console.log("headers", headers);
+        console.log("data", requestData);
+        if (requestData && requestData.interactive && requestData.interactive.action){
+            console.log("data.interactive.action", requestData.interactive.action);
+            let itemExplorer = requestData.interactive.action.sections;
+            itemExplorer.forEach( (section) => {
+                section.rows.forEach((row) => {
+                    console.log("row", row);
+                });
+            });
+        }
+        sending = await axios({
             method: "POST",
             url: url,
             headers: headers,
-            data: requestData
+            data: JSON.stringify(requestData)
         });
-        console.log("sending", sending.data.messages);
+
         // logRegistry = { step: "Resultado de usar axios en botMessageSender", "axios": sending };
         // await logRecorder(logRegistry);
         return true;

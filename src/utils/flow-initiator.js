@@ -58,7 +58,8 @@ export async function flowInitiator({company,business,user,flow}){
             business,
             user,
             flow,
-            newFlowNumber[0].quantity
+            newFlowNumber[0].quantity,
+            "wab"
         ];
         const newFlowId = await queryDb(query, params, false);
 
@@ -84,7 +85,13 @@ export async function flowInitiator({company,business,user,flow}){
             };
             await logRecorder(logRegistry);
 
-        return sessionKeyDB;
+        return {
+            company_id: company,
+            company_media: business,
+            user_media: user,
+            flow_id: flow,
+            flow_number: Number(newFlowNumber[0].quantity)
+        };
     } catch (e) {
         throw new Error(`Error in flow initiator: ${e.message}`);
     }

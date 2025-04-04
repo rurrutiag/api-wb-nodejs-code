@@ -6,20 +6,35 @@ export async function messageSaver({
     flowSession,
     actor,
     content,
-    contentType}) {
+    contentType,
+    originalId=null
+}) {
         try {
-            const flowData = getFlowData({flowSession: flowSession});
-            const lastItem = await lastMessageFinder({
-                flowSession: flowData
-            });
-            let interactionsNumber = Number(lastItem.flowNumber);
             
+            // const flowData = getFlowData({flowSession: flowSession});
+            const flowData = flowSession;
+            const lastItem = await lastMessageFinder({
+                flowData: flowData
+            });
+            
+            let interactionsNumber;
+            if (lastItem !== null) {
+                interactionsNumber = lastItem.interaction_index;
+            } else {
+                interactionsNumber = 0;
+            }
             let newInteractionsNumber = interactionsNumber + 1;
-            const lastItemId = lastItem.id;
+            
+            let lastItemId;
+            if (lastItem !== null) {
+                lastItemId = lastItem.id;
+            } else {
+                lastItemId = null;
+            }
 
             let query = `
-                INSERT INTO messages(platform, interaction_index, company_id, company_media, user_media, flow_id, flow_number, "from", content_type, content, previous_item_id)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11)
+                INSERT INTO messages(platform, interaction_index, company_id, company_media, user_media, flow_id, flow_number, "from", content_type, content, previous_item_id, metadata)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12::jsonb)
                 RETURNING id;
             `;
             let sentBy = actor;
@@ -28,18 +43,23 @@ export async function messageSaver({
             } else {
                 sentBy = "user";
             }
+
+            let metadataItem = {};
+            originalId !== null && (metadataItem.item_id = originalId);
+
             let params = [
                 "wab",
                 newInteractionsNumber,
-                flowData.company,
-                flowData.receive,
-                flowData.sender,
-                flowData.flow,
-                flowData.flowNumber,
+                flowData.company_id,
+                flowData.company_media,
+                flowData.user_media,
+                flowData.flow_id,
+                Number(flowData.flow_number),
                 sentBy,
                 contentType,
                 JSON.stringify(content),
-                lastItemId
+                lastItemId,
+                JSON.stringify(metadataItem)
             ];
             const newMessage = await queryDb(query, params, false);
 
@@ -63,7 +83,7 @@ export async function messageSaverNoFlow({
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11)
                 RETURNING id;
             `;
-            let sentBy;
+            let sentBy = actor;
             if (actor === "receiver") {
                 sentBy = "business";
             } else {

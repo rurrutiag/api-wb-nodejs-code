@@ -115,7 +115,7 @@ export async function handlePostWebhook(req, res) {
             firstMessageId: flowFound.first_item_id
         });
 
-        logRegistry = {
+            logRegistry = {
             step: "Resultado de flowResponse",
             flowResponse: flowResponse,
             
@@ -125,12 +125,14 @@ export async function handlePostWebhook(req, res) {
         if (!flowResponse) {
             return res.status(422).json({ error: "Mensaje recibido no compatible con el flujo esperado." });
         }
+
         // Guardar la respuesta del bot y enviarla al usuario
         messageSaver({
             flowSession: flowFound.flow_id,
             actor: "receiver",
             content: flowResponse.content,
-            contentType: flowResponse.content_type
+            contentType: flowResponse.content_type,
+            originalId: flowResponse.item_id
         });
         let botSentMessage = await botMessageSender({
             receiver: receiver,
@@ -143,6 +145,8 @@ export async function handlePostWebhook(req, res) {
             botSentMessage: botSentMessage,     
         };
         await logRecorder(logRegistry);
+
+        console.log("--------");
 
         if (botSentMessage) {
             return res.status(200).send('OK'); // Éxito

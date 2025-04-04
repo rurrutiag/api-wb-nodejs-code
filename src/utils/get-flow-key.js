@@ -46,6 +46,7 @@ export function getFlowKey({
 }
 
 export function getFlowData({flowSession}){
+
     const regex = /session:([a-f0-9-]+):wab:receive:([a-f0-9-]+):sender:([a-f0-9-]+):flow:([a-f0-9-]+):number:([0-9]+)/;
     const matches = flowSession.match(regex);
     if (matches) {

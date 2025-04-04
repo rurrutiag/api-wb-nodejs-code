@@ -38,8 +38,10 @@ export async function flowReviewer({
             companyId: companyId,
             message: messageData
         });
+       
         // Si el mensaje es trigger, cerraremos los flujos activos
-        if (triggerFound !== null) {
+        if (triggerFound !== null && flowFound !== null) {
+
             await flowArchiver({
                 company_id: companyId,
                 company_media: companyMedia,
@@ -85,6 +87,7 @@ export async function flowReviewer({
                     contentType: messageData.type
                 });
                 if (messageSent) {
+
                     return {
                         status: 200,
                         message: 'Flujo de conversación no encontrado.'

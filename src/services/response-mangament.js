@@ -28,16 +28,17 @@ async function getExpectedMessage({sessionData, messageFrom, fromFlow}){
     
     // Si no se encontró el mensaje del bot o no tiene un item_id, retornamos null
     if (!lastMessageSentByBot || !lastMessageSentByBot.item_id) return null;
-    const itemIdtoSearchFor = lastMessageSentByBot.item_id;
+    const itemIdtoSearchFor = lastMessageSentByBot.metadata.item_id;
     
     let message = null;
     let actionIds = [];
     // Buscar el mensaje en el flujo
-    if (fromFlow && fromFlow.length > 0) {
+
+    if (fromFlow && Object.keys(fromFlow).length > 0) {
         fromFlow.forEach((row) => {
             if (row.item_id === itemIdtoSearchFor) {
                 message = row;
-                if (row.next_item_id && Array.isArray(row.next_item_id.next_items)) {
+                if (row.next_item_id && typeof row.next_item_id.next_items === 'object') {
                     // Recorremos el array `next_items` dentro de `item.next_item_id`
                     row.next_item_id.next_items.forEach(nextItem => {
                         // Verificamos si el objeto dentro de `next_items` tiene la propiedad `action_id` y `next_item_id`
@@ -80,7 +81,7 @@ function dataHunterFromFlowItem({fromFlow, itemIdToUse}){
             itemData = row;
         }
     })
-    return itemData.length > 0 ? itemData : null;
+    return Object.keys(itemData).length > 0 ? itemData : null;
 }
 
 /**
@@ -121,9 +122,9 @@ function receivedMessageMatchesExpectedResponse({messageRequest, expectedRespons
             // El usuario respondió con un texto cuando se espera otro tipo de mensaje
             if (messageRequest.type !== expectedResponse.type_expected_response.type) { return false; }
             // Para el caso que el usuario hizo clíck en un anuncio con un call-2-action a WhatsApp (para medir conversión)
-            if (messageRequest.includes("referral")) { return false;}
+            if ('referral' in messageRequest) { return false;}
             // Para el caso que el usuario solicita más información sobre un producto (responde a mensajes de un produto o varios, o accede al catalogo desde otro punto)
-            if (messageRequest.includes("context")) { return false; }
+            if ('context' in messageRequest) { return false; }
             // Si no es ninguno de los casos, se espera que sea un texto normal. Para este primer paso no validaremos el tipo de texto
             return expectedResponse.actions[expectedResponse.item_id];
         }
@@ -173,17 +174,19 @@ export async function responseManager({
     messageRequest = null,
     firstMessageId = null
 }){
-    const flowData = getFlowData({flowSession: sessionFlowKey});
-    
-    const fromFlow = await flowMessageHunter({flow: flowData.flow});
+
+    // const flowData = getFlowData({flowSession: sessionFlowKey});
+    const flowData = sessionFlowKey;
+
+    const fromFlow = await flowMessageHunter({flow: flowData.flow_id});
 
     // Si se recibe un ID de mensaje inicial, se recupera directamente (es trigger)
     if (firstMessageId !== null) {
-        
-        return dataHunterFromFlowItem({
+        const huntedData = dataHunterFromFlowItem({
             fromFlow: fromFlow,
             itemIdToUse: firstMessageId
         });
+        return huntedData;
     }
     // Obtener respuesta esperada basado en el último mensaje enviado por el bot
     const expectedResponse = await getExpectedMessage({
@@ -191,6 +194,7 @@ export async function responseManager({
         messageFrom: "business",
         fromFlow: fromFlow
     });
+
     // Si existe un tipo de respuesta esperada
     if (expectedResponse) {
         // Obtener las respuestas esperadas para el flujo actual
@@ -199,6 +203,7 @@ export async function responseManager({
             messageRequest: messageRequest,
             expectedResponse: expectedResponse
         });
+        
         let nextMessageObject = {};
         if (isMatch) {
             fromFlow.forEach((row) => {
