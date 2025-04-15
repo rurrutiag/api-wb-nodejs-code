@@ -1,5 +1,19 @@
-import { getCache } from "../cache/manager.js";
 import businessFlowTriggersHunter from "./business-flow-triggers-hunter.js";
+
+function doesMessageMatchSupply(message, supply) {
+    switch (message.type) {
+        case "text":
+            return supply.text && supply.text?.body && message.text?.body && message.text?.body === supply.text?.body;
+        case "interactive":
+            return (
+                message.interactive &&
+                message.interactive?.type === supply.interactive?.type &&
+                message.interactive?.[message.interactive.type]?.id === supply.interactive?.[message.interactive.type]?.id
+            );
+        default:
+            return false;
+    }
+}
 
 /**
  * Función que busca un desencadenador (trigger) en la caché basado en el tipo de mensaje y los datos del mensaje.
@@ -20,35 +34,31 @@ export default async function triggerFinder({
     
     const flowTriggers = await businessFlowTriggersHunter();
     let triggersMatrix = {};
+    //  Asegurar que trigger_data sea parseado y esté como array
     Object.entries(flowTriggers).forEach(([company, triggers]) => {
         triggersMatrix[company] = triggers;
     });
+
     let companyTriggers = triggersMatrix[companyId];
     // const triggers = getCache(`triggers:${companyId}`);
     
     if (!companyTriggers || companyTriggers.length === 0) {
         return null;
     }
+
     for (const trigger of companyTriggers) {
-        if (
-            trigger.trigger_type === message.type
-        ) {
-            
-            switch (message.type) {
-                case "text":
-                    if (message.text.body === trigger.trigger_data.text.body) {
-                        return {
-                            flow_id: trigger.flow_id,
-                            first_item_id: trigger.trigger_data.first_item_id
-                        };
+        if ( trigger.trigger_type === "basic" ) {
+            const supplies = trigger.trigger_data?.supplies ?? [];
+            for (const supply of supplies) {
+                if (doesMessageMatchSupply(message, supply)) {
+                    return {
+                        flow_id: trigger.flow_id,
+                        first_item_id: trigger.trigger_data.first_item_id
                     }
-                    break;
-            
-                default:
-                    break;
+                }
             }
-            return null;
+            
         }
-    }
+    }   
     return null;
 }

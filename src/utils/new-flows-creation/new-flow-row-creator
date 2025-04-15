@@ -1,0 +1,40 @@
+import { queryDb } from "../../db/db-query.js";
+/**
+ * Crea un nuevo flujo en la tabla `messages_flows` y retorna su ID.
+ *
+ * @async
+ * @function newFlowRowCreator
+ * @param {Object} params - Parámetros de entrada.
+ * @param {string} params.companyId - ID de la empresa a la que pertenece el flujo.
+ * @param {string} params.flow_name - Nombre del flujo.
+ * @param {string} params.flow_trigger_type - Tipo de disparador del flujo (ej: 'text', 'interactive').
+ * @param {Object} params.flow_trigger - Datos del disparador, en formato JSON.
+ *
+ * @returns {Promise<number>} ID del flujo recién creado.
+ * @throws {Error} Lanza un error si la operación de inserción en la base de datos falla.
+ */
+export async function newFlowRowCreator({
+    companyId,
+    flow_name,
+    flow_trigger_type,
+    flow_trigger
+}){
+    let query = `
+        INSERT INTO messages_flows(company_id, name, trigger_type, trigger_data)
+        VALUES($1, $2, $3, $4::jsonb)
+        RETURNING id;
+    `;
+    let params = [
+        companyId,
+        flow_name,
+        flow_trigger_type,
+        flow_trigger
+    ]; 
+    try {
+        const dbResponse = await queryDb(query, params, false);
+        return dbResponse[0].id;
+    } catch (error) {
+        console.error(`newFlowRowCreator | Error al crear el flujo "${flow_name}":`, error);
+        throw error;
+    }
+}

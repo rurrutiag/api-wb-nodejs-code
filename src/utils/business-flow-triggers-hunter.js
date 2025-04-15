@@ -22,6 +22,6 @@ export default async function businessFlowTriggersHunter(){
         );
         return groupedData;
     } catch (e) {
-        throw new Error(`Error en capturar datos gatillos de flujos de negocio: ${e.message}`);
+        throw new Error(`businessFlowTriggersHunter | Error en capturar datos gatillos de flujos de negocio: ${e.message}`);
     }
 }

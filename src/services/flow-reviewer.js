@@ -24,7 +24,7 @@ import triggerFinder from "../utils/trigger-finder.js";
  * @throws {Object} Retorna un error HTTP 404 si no se encuentra un flujo o un trigger válido.
  */
 export async function flowReviewer({
-    res, companyId, companyMedia, userMedia, messageData
+    companyId, companyMedia, userMedia, messageData
 }) {
     try {
         // Buscaremos los flujos activos
@@ -38,6 +38,8 @@ export async function flowReviewer({
             companyId: companyId,
             message: messageData
         });
+
+        console.log("flow-reviewer | linea 42", triggerFound);
        
         // Si el mensaje es trigger, cerraremos los flujos activos
         if (triggerFound !== null && flowFound !== null) {

@@ -39,7 +39,7 @@ export async function handlePostWebhook(req, res) {
     try {
         // Recuperar la solicitud entrante
         const incomingRequest = req.body.entry?.[0]?.changes?.[0]?.value || null;
-        
+       
         if (!incomingRequest) {
             return res.status(400).json({ error: "Solicitud inválida: estructura incorrecta." });
         }
@@ -72,6 +72,7 @@ export async function handlePostWebhook(req, res) {
         // Extraer los datos del mensaje
         const messageData = dataExtractorFromRequest({messageRequest: incomingMessage});
 
+
         if (!messageData) {
             logRegistry = {
                 step: "No hay resultado de messageData",
@@ -89,6 +90,8 @@ export async function handlePostWebhook(req, res) {
             userMedia: sender,
             messageData: messageData
         });
+
+        // console.log("handle-post-webhook.js | linea 94", flowFound);
 
         logRegistry = {
             step: "Resultado de flowReviewer",

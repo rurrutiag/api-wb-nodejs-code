@@ -1,0 +1,115 @@
+{
+    "companyId": "7332e51b-4c07-4a63-8918-da298c5783e2",
+    "platform": "15551792268",
+    "flow": {
+        "name": "Flujo 3.1: Horas de vuelo",
+        "trigger": {
+            "supplies": [
+                {
+                    "interactive": {
+                        "type": "list_reply",
+                        "list_reply": {
+                            "id": "0d54e393-1355-45eb-8100-d8b0b30be486",
+                            "title": "Piloto privado",
+                            "description": "Puedes volvar recreativamente, sin fines comerciales."
+                        }
+                    },
+                    "type": "interactive"
+                },
+                {
+                    "interactive": {
+                        "type": "list_reply",
+                        "list_reply": {
+                            "id": "9cba7524-0b57-405f-b432-fd1aa264e18e",
+                            "title": "Piloto comercial",
+                            "description": "Puedes volar facturando, siendo o no piloto de aerolínea."
+                        }
+                    },
+                    "type": "interactive"
+                }
+            ]
+        },
+        "trigger_type": "basic"
+    },
+    "items": [
+        {
+            "number": "1",
+            "previous_item": null,
+            "type": "interactive",
+            "class": "button",
+            "header": {
+                "text": "¡Perfecto!"
+            },
+            "body": {
+                "text": "Para orientarte mejor sobre nuestros programas, ¿podrías indicarme si tienes más de 1.000 horas de vuelo?"
+            },
+            "footer": {
+                "text": "Deberás seleccionar una opción para continuar."
+            },
+            "button_text": "",
+            "buttons": [
+                {
+                    "number": "2",
+                    "title": "Más de 1.000 hrs"
+                },
+                {
+                    "number": "3",
+                    "title": "Menos de 1.000 hrs"
+                }
+            ]
+        }
+    ]
+}
+
+// Para botones
+
+
+// Para listas
+{
+    "number": "1",
+    "previous_item": null,
+    "type": "interactive",
+    "class": "button",
+    "header": {
+        "text": "¡Perfecto!"
+    },
+    "body": {
+        "text": "Para orientarte mejor sobre nuestros programas, ¿podrías indicarme si tienes más de 1.000 horas de vuelo?"
+    },
+    "footer": {
+        "text": "Deberás seleccionar una opción para continuar."
+    },
+    "button_text": "",
+    "services": [
+        {
+            "category": "Licencias aeronáuticas",
+            "services": [
+                {
+                    "number": "2",
+                    "title": "Piloto privado",
+                    "description": "Puedes volvar recreativamente, sin fines comerciales."
+                },
+                {
+                    "number": "3",
+                    "title": "Piloto comercial",
+                    "description": "Puedes volar facturando, siendo o no piloto de aerolínea."
+                },
+                {
+                    "number": "4",
+                    "title": "Comercial FAA 🇺🇸",
+                    "description": "Licencia comercial bajo normas de EEUU."
+                },
+                {
+                    "number": "5",
+                    "title": "ATP",
+                    "description": "Requisito para ser piloto al mando en aerolíneas."
+                },
+                {
+                    "number": "6",
+                    "title": "Ninguna",
+                    "description": "No poseo licencia de vuelo para pilotear aeronaves."
+                }
+            ]
+        }
+    ]
+}
